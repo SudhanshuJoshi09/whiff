@@ -4,13 +4,11 @@
 #include <netinet/in.h>
 #include <unistd.h>
 
-#define SOCK_PORT 9090
+#define SOCK_PORT 9091
 
 int main() {
 
   int count = 0;
-
-
 
   struct sockaddr_in my_addr;
 
@@ -25,8 +23,16 @@ int main() {
   // STEP - 02: Setting up socket address.
   // memset(&my_addr, 0, sizeof(my_addr));
   my_addr.sin_family = AF_INET;
+  // htons and htonl functions are used to convert to network byte order..
+  // Learn about these byte orders.
   my_addr.sin_port = htons(SOCK_PORT);
   my_addr.sin_addr.s_addr= htonl(INADDR_ANY);
+
+
+  // STEP - 02(b): Set up this option to reuse the same address after restart and not hog the address..
+  int val = 1;
+  setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &val, sizeof(val));
+
 
   // STEP - 03: Setting up server_fd (this is for creating socket)
   int server_fd = bind(fd, (struct server_fdaddr *) &my_addr, sizeof(my_addr));
@@ -57,11 +63,20 @@ int main() {
       return -1;
     }
 
-    // STEP 6: Send data to the client
-    char *message = "Hello from the server!\n";
-    send(client_fd, message, strlen(message), 0);
-    printf("Message sent to client.\n");
+    // STEP 6: Send data to the client.
+    char incoming_message[50];
+    char outgoing_message[50];
+
+    int _fs = sprintf(outgoing_message, "You are %d visiter", count);
+    size_t _mc = recv(client_fd, incoming_message, strlen(incoming_message), 0);
+
+    // STEP 7: Send message to the client.
+    send(client_fd, outgoing_message, strlen(outgoing_message), 0);
+    printf("Message sent to server : %s\n", incoming_message);
+    printf("Message sent to client : %s\n", outgoing_message);
+
     close(client_fd);
+    count += 1;
   }
 
   close(fd);
