@@ -4,6 +4,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <string.h>
+#include "utils.c"
 
 #define SOCK_PORT 9091
 
@@ -30,9 +31,34 @@ int main() {
     return 0;
   }
   char *message = "Hello world\n\n";
-  size_t _tmp = send(conn, message, strlen(message), 0);
+  int message_size = strlen(message);
+  char* message_size_bin = get_binary_value(message_size, 4);
+  char* message_value_bin = get_binary_message(message);
+  int outgoing_message_size = strlen(message_size_bin) + strlen(message_value_bin);
+  char* outgoing_message = (char*)malloc(sizeof(char)*outgoing_message_size);
+
+  if(sprintf(outgoing_message, "%s%s", message_size_bin, message_value_bin) < 0) {
+    printf("Failed to format the string ..");
+    return 0;
+  }
+
+  char* up_message_size = parse_binary_message(message_size_bin, 4);
+
+  printf("This is the unparsed version of the message len: %s\n\n", up_message_size);
+
+  printf("This is the outgoing_message : %s\n", outgoing_message);
+
+
+  size_t _tmp = send(fd, outgoing_message, strlen(outgoing_message), 0);
   if (_tmp < 0) {
     printf("Failed to send message ..");
   }
+
+  char incoming_message[50];
+
+  size_t _newtmp = recv(fd, incoming_message, sizeof(incoming_message), 0);
+
+  printf("Recieved from the server %s\n", incoming_message);
+
   return 0;
 }

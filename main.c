@@ -64,11 +64,11 @@ int main() {
     }
 
     // STEP 6: Send data to the client.
-    char incoming_message[50];
+    char incoming_message[1000];
     char outgoing_message[50];
 
     int _fs = sprintf(outgoing_message, "You are %d visiter", count);
-    size_t _mc = recv(client_fd, incoming_message, strlen(incoming_message), 0);
+    size_t _mc = recv(client_fd, incoming_message, sizeof(incoming_message), 0);
 
     // STEP 7: Send message to the client.
     send(client_fd, outgoing_message, strlen(outgoing_message), 0);

@@ -1,13 +1,13 @@
 
 
 run_server:
-	./main
+	./output/main
 
 run_client:
-	./client
+	./output/client
 
 server:
-	gcc main.c -o output/main && ./output/main
+	gcc -Wall -Wextra -pedantic main.c -o ./output/main && ./output/main
 
 client:
-	gcc client.c -o output/client && ./output/client
+	gcc -Wall -Wextra -pedantic client.c -o ./output/client && ./output/client
