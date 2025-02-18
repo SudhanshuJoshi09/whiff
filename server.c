@@ -3,6 +3,7 @@
 #include <string.h>
 #include <netinet/in.h>
 #include <unistd.h>
+#include "utils.c"
 
 #define SOCK_PORT 9091
 
@@ -63,16 +64,35 @@ int main() {
       return -1;
     }
 
-    // STEP 6: Send data to the client.
-    char incoming_message[1000];
-    char outgoing_message[50];
+    // STEP 6: Get data from client.
+    // size_t _mc = recv(client_fd, incoming_message, sizeof(incoming_message), 0);
+    char incoming_message_size[33];
+    incoming_message_size[32] = '\0';
+    int bytes_read = 0; 
+    while(bytes_read != 32) {
+      // NOTE: this is considering char takes only 1 byte of space.
+      size_t read_count = recv(client_fd, incoming_message_size + bytes_read, 32 - bytes_read, 0);
+      bytes_read += read_count;
+    }
 
-    int _fs = sprintf(outgoing_message, "You are %d visiter", count);
-    size_t _mc = recv(client_fd, incoming_message, sizeof(incoming_message), 0);
+    int message_size = parse_binary_count(incoming_message_size, 4)*8;
+    char* incoming_message = (char*)malloc(message_size + 1);
+    incoming_message[message_size] = '\0';
+    bytes_read = 0; 
+    while(bytes_read != message_size) {
+      size_t read_count = recv(client_fd, incoming_message + bytes_read, message_size - bytes_read, 0);
+      bytes_read += read_count;
+    }
+
+    char* final_message = parse_binary_message(incoming_message, 1);
+    printf("This is the message recieved from the client :: %s\n", final_message);
+
 
     // STEP 7: Send message to the client.
+    char outgoing_message[50];
+    int _fs = sprintf(outgoing_message, "You are %d visiter", count);
     send(client_fd, outgoing_message, strlen(outgoing_message), 0);
-    printf("Message sent to server : %s\n", incoming_message);
+    // printf("Message sent to server : %s\n", incoming_message);
     printf("Message sent to client : %s\n", outgoing_message);
 
     close(client_fd);

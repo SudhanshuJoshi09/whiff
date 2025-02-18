@@ -42,11 +42,10 @@ int main() {
     return 0;
   }
 
-  char* up_message_size = parse_binary_message(message_size_bin, 4);
-
-  printf("This is the unparsed version of the message len: %s\n\n", up_message_size);
-
   printf("This is the outgoing_message : %s\n", outgoing_message);
+
+  char* tmp_message = parse_binary_message(message_value_bin, 1);
+  printf("This is the outgoing_message_parsed : %s\n", tmp_message);
 
 
   size_t _tmp = send(fd, outgoing_message, strlen(outgoing_message), 0);

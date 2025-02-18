@@ -39,7 +39,7 @@ char* parse_binary_message(char* message, int byte_count) {
   printf("(%d, %d, %d)", strlen(message), char_size, char_count);
   for(int i = 1; i <= char_count; i++) {
     int char_value = 0;
-    for(int j = i*char_size - 1; j > (i-1)*char_size; j--) {
+    for(int j = i*char_size - 1; j >= (i-1)*char_size; j--) {
       char_value *= 2;
       if(message[j] == '1') {
         char_value += 1;
@@ -47,7 +47,6 @@ char* parse_binary_message(char* message, int byte_count) {
     }
     char result_char = (char)char_value;
     result[i-1] = result_char;
-    printf("TESTING 1234 ::: %s\n\n", result);
   }
   result[char_count] = '\0';
   return result;
@@ -55,20 +54,17 @@ char* parse_binary_message(char* message, int byte_count) {
 
 int parse_binary_count(char* message, int byte_count) {
   int char_size = byte_count * 8;
-  int char_count = strlen(message) / char_size;
-  printf("(%d, %d, %d)", strlen(message), char_size, char_count);
-  for(int i = 1; i <= char_count; i++) {
-    int char_value = 0;
-    for(int j = i*char_size - 1; j > (i-1)*char_size; j--) {
-      char_value *= 2;
+  int num_count = strlen(message) / char_size;
+  int* result = (int*)malloc(num_count);
+  for(int i = 1; i <= num_count; i++) {
+    int curr_value = 0;
+    for(int j = i*char_size - 1; j >= (i-1)*char_size; j--) {
+      curr_value *= 2;
       if(message[j] == '1') {
-        char_value += 1;
+        curr_value += 1;
       }
     }
-    char result_char = (char)char_value;
-    result[i-1] = result_char;
-    printf("TESTING 1234 ::: %s\n\n", result);
+    result[i-1] = curr_value;
   }
-  result[char_count] = '\0';
-  return result;
+  return result[0];
 }
