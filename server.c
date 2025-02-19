@@ -4,8 +4,59 @@
 #include <netinet/in.h>
 #include <unistd.h>
 #include "utils.c"
+#include <pthread.h>
 
 #define SOCK_PORT 9091
+
+
+     // int
+     // pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start_routine)(void *), void *arg);
+
+
+void* process_request(void* arg) {
+  // int client_fd = (int)cfd;
+  int client_fd = *(int*)arg;
+  if (client_fd < 0) {
+    perror("Accept failed");
+    // close(fd);
+    // close(server_fd);
+    return NULL;
+  }
+
+  // STEP 6: Get data from client.
+  // size_t _mc = recv(client_fd, incoming_message, sizeof(incoming_message), 0);
+  char incoming_message_size[33];
+  incoming_message_size[32] = '\0';
+  int bytes_read = 0; 
+  while(bytes_read != 32) {
+    // NOTE: this is considering char takes only 1 byte of space.
+    size_t read_count = recv(client_fd, incoming_message_size + bytes_read, 32 - bytes_read, 0);
+    bytes_read += read_count;
+  }
+
+  int message_size = parse_binary_count(incoming_message_size, 4)*8;
+  char* incoming_message = (char*)malloc(message_size + 1);
+  incoming_message[message_size] = '\0';
+  bytes_read = 0; 
+  while(bytes_read != message_size) {
+    size_t read_count = recv(client_fd, incoming_message + bytes_read, message_size - bytes_read, 0);
+    bytes_read += read_count;
+  }
+
+  char* final_message = parse_binary_message(incoming_message, 1);
+  printf("This is the message recieved from the client :: %s\n", final_message);
+
+  sleep(10);
+
+
+  char outgoing_message[50];
+  int _fs = sprintf(outgoing_message, "You are visiter");
+  send(client_fd, outgoing_message, strlen(outgoing_message), 0);
+  printf("Message sent to client : %s\n", outgoing_message);
+  close(client_fd);
+
+  return NULL;
+}
 
 int main() {
 
@@ -57,45 +108,8 @@ int main() {
 
   while (1) {
     int client_fd = accept(fd, (struct sockaddr *) &my_addr, &sock_len);
-    if (client_fd < 0) {
-      perror("Accept failed");
-      close(fd);
-      close(server_fd);
-      return -1;
-    }
-
-    // STEP 6: Get data from client.
-    // size_t _mc = recv(client_fd, incoming_message, sizeof(incoming_message), 0);
-    char incoming_message_size[33];
-    incoming_message_size[32] = '\0';
-    int bytes_read = 0; 
-    while(bytes_read != 32) {
-      // NOTE: this is considering char takes only 1 byte of space.
-      size_t read_count = recv(client_fd, incoming_message_size + bytes_read, 32 - bytes_read, 0);
-      bytes_read += read_count;
-    }
-
-    int message_size = parse_binary_count(incoming_message_size, 4)*8;
-    char* incoming_message = (char*)malloc(message_size + 1);
-    incoming_message[message_size] = '\0';
-    bytes_read = 0; 
-    while(bytes_read != message_size) {
-      size_t read_count = recv(client_fd, incoming_message + bytes_read, message_size - bytes_read, 0);
-      bytes_read += read_count;
-    }
-
-    char* final_message = parse_binary_message(incoming_message, 1);
-    printf("This is the message recieved from the client :: %s\n", final_message);
-
-
-    // STEP 7: Send message to the client.
-    char outgoing_message[50];
-    int _fs = sprintf(outgoing_message, "You are %d visiter", count);
-    send(client_fd, outgoing_message, strlen(outgoing_message), 0);
-    // printf("Message sent to server : %s\n", incoming_message);
-    printf("Message sent to client : %s\n", outgoing_message);
-
-    close(client_fd);
+    pthread_t threadId;
+    int _tid = pthread_create(&threadId, NULL, process_request, (void*) &client_fd);
     count += 1;
   }
 
